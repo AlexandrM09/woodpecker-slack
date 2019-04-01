@@ -10,7 +10,7 @@ import (
 // Config is config
 type Config struct {
 	Slack slack
-	Jira  jira
+	Wrike wrike
 }
 
 type slack struct {
@@ -20,6 +20,10 @@ type slack struct {
 type jira struct {
 	Username string
 	Password string
+}
+
+type wrike struct {
+	Token string
 }
 
 // New loads config from filename
@@ -45,12 +49,7 @@ func New(filename string) *Config {
 		return nil
 	}
 
-	config.Jira.Username, err = configReader.String("jira.username")
-	if err != nil {
-		return nil
-	}
-
-	config.Jira.Password, err = configReader.String("jira.password")
+	config.Wrike.Token, err = configReader.String("wrike.token")
 	if err != nil {
 		return nil
 	}
