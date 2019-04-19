@@ -1,11 +1,7 @@
 package slack
 
 import (
-	"fmt"
-
 	"github.com/nlopes/slack"
-
-	"../config"
 )
 
 type Client struct {
@@ -20,10 +16,8 @@ type Message struct {
 
 type ChannelID string
 
-func New(config *config.Config) *Client {
-	fmt.Println("New config")
-	fmt.Println(config.Slack.Token)
-	a := slack.New(config.Slack.Token)
+func New(token string) *Client {
+	a := slack.New(token)
 	return &Client{api: a}
 }
 
@@ -52,4 +46,12 @@ func (c *Client) GetMessages() chan Message {
 
 func (id ChannelID) GetRealID() string {
 	return string(id)
+}
+
+func (c *Client) GetIDByEmail(email string) (string, error) {
+	user, err := c.api.GetUserByEmail(email)
+	if err != nil {
+		return "", err
+	}
+	return user.ID, nil
 }

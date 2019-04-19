@@ -10,8 +10,8 @@ const MaxUsersCount = 100
 // SlackID is a representation of the type of user ID in slack
 type SlackID string
 
-// JiraID is a representation of the type of user ID in Jira
-type JiraID string
+// WrikeID is a representation of the type of user ID in Wrike
+type WrikeID string
 
 // OauthToken is a representation of the type of user token in jira
 type OauthToken string
@@ -33,9 +33,12 @@ type Users struct {
 
 // User is an abstraction over a user with accounts in jira and slack
 type User struct {
-	slackID    SlackID
-	jiraID     JiraID
-	oauthToken OauthToken
+	SlackID      SlackID
+	WrikeID      WrikeID
+	OauthToken   OauthToken
+	RefreshToken string
+	SlackChannal string
+	Email        string
 }
 
 // New creates new users storage
@@ -49,7 +52,7 @@ func (users *Users) AddUser(user *User) error {
 	defer users.mt.Unlock()
 
 	for _, u := range users.users {
-		if u.slackID == user.slackID || u.jiraID == u.jiraID {
+		if u.SlackID == user.SlackID || u.WrikeID == u.WrikeID {
 			return &DuplicateError{"User already exist"}
 		}
 	}
@@ -63,20 +66,20 @@ func (users *Users) FindBySlackID(slackID SlackID) *User {
 	defer users.mt.RUnlock()
 
 	for _, user := range users.users {
-		if user.slackID == slackID {
+		if user.SlackID == slackID {
 			return user
 		}
 	}
 	return nil
 }
 
-// FindByJiraID finds user by jira id
-func (users *Users) FindByJiraID(jiraID JiraID) *User {
+// FindByWrikeID finds user by jira id
+func (users *Users) FindByWrikeID(wrikeID WrikeID) *User {
 	users.mt.RLock()
 	defer users.mt.RUnlock()
 
 	for _, user := range users.users {
-		if user.jiraID == jiraID {
+		if user.WrikeID == wrikeID {
 			return user
 		}
 	}

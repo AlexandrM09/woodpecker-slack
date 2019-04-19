@@ -10,6 +10,7 @@ import (
 	"./oauth"
 	"./slack"
 	"./users"
+	"./wrike"
 )
 
 func main() {
@@ -19,16 +20,17 @@ func main() {
 	if config == nil {
 		panic("Config didn't load")
 	}
-	api := slack.New(config)
 
+	apiMessenger := slack.New(config.Slack.Token)
+	apiTaskmanager := wrike.New(config.Wrike.Token)
 	usersStorage := users.New()
 
 	var wg sync.WaitGroup
 	wg.Add(3)
 
-	go oauth.Start(&wg, usersStorage, config)
-	go bot.Start(&wg, usersStorage, api, config)
-	go checker.Start(&wg, usersStorage, config)
+	go oauth.Start(&wg, usersStorage)
+	go bot.Start(&wg, usersStorage, apiMessenger)
+	go checker.Start(&wg, usersStorage, apiTaskmanager, apiMessenger)
 
 	wg.Wait()
 }

@@ -57,7 +57,7 @@ func TestFindBySlackID(t *testing.T) {
 		return
 	}
 
-	user := User{slackID: slackID}
+	user := User{SlackID: slackID}
 	users.AddUser(&user)
 
 	if users.FindBySlackID(slackID) == nil {
@@ -67,18 +67,18 @@ func TestFindBySlackID(t *testing.T) {
 }
 
 func TestFindByJiraID(t *testing.T) {
-	const jiraID = "5ac5326a95d30150501e5ff4"
+	const wrikeID = "5ac5326a95d30150501e5ff4"
 	users := New()
 
-	if users.FindByJiraID(jiraID) != nil {
+	if users.FindByWrikeID(wrikeID) != nil {
 		t.Error("Found non-existent user")
 		return
 	}
 
-	user := User{jiraID: jiraID}
+	user := User{WrikeID: wrikeID}
 	users.AddUser(&user)
 
-	if users.FindByJiraID(jiraID) == nil {
+	if users.FindByWrikeID(wrikeID) == nil {
 		t.Error("Not found existent user")
 		return
 	}
