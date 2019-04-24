@@ -28,8 +28,8 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(3)
 
-	go oauth.Start(&wg, usersStorage)
-	go bot.Start(&wg, usersStorage, apiMessenger)
+	go oauth.Start(&wg, usersStorage, config)
+	go bot.Start(&wg, usersStorage, apiMessenger, config)
 	go checker.Start(&wg, usersStorage, apiTaskmanager, apiMessenger)
 
 	wg.Wait()

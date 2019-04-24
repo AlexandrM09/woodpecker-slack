@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"../config"
 	"../slack"
 	musers "../users"
 )
@@ -11,7 +12,7 @@ import (
 var api *slack.Client
 
 // Start starts the bot
-func Start(wg *sync.WaitGroup, users *musers.Users, api *slack.Client) {
+func Start(wg *sync.WaitGroup, users *musers.Users, api *slack.Client, config *config.Config) {
 	defer wg.Done()
 
 	fmt.Println("Bot started!")
@@ -26,7 +27,7 @@ func Start(wg *sync.WaitGroup, users *musers.Users, api *slack.Client) {
 		user := users.FindBySlackID(musers.SlackID(message.User))
 		user.SlackChannal = string(message.Channel)
 		if user.OauthToken == "" {
-			api.SendMessage("Need oauth https://www.wrike.com/oauth2/authorize/v4?client_id=A61nSaq5&response_type=code", message.Channel)
+			api.SendMessage("Need oauth https://www.wrike.com/oauth2/authorize/v4?client_id="+config.Wrike.ID+"&response_type=code", message.Channel)
 		} else {
 			api.SendMessage("Hello", message.Channel)
 		}

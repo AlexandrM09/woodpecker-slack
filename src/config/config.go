@@ -23,7 +23,9 @@ type jira struct {
 }
 
 type wrike struct {
-	Token string
+	Token  string
+	ID     string
+	Secret string
 }
 
 // New loads config from filename
@@ -50,6 +52,16 @@ func New(filename string) *Config {
 	}
 
 	config.Wrike.Token, err = configReader.String("wrike.token")
+	if err != nil {
+		return nil
+	}
+
+	config.Wrike.ID, err = configReader.String("wrike.id")
+	if err != nil {
+		return nil
+	}
+
+	config.Wrike.Secret, err = configReader.String("wrike.secret")
 	if err != nil {
 		return nil
 	}

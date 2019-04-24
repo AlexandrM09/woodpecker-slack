@@ -73,7 +73,7 @@ func (users *Users) FindBySlackID(slackID SlackID) *User {
 	return nil
 }
 
-// FindByWrikeID finds user by jira id
+// FindByWrikeID finds user by wrike id
 func (users *Users) FindByWrikeID(wrikeID WrikeID) *User {
 	users.mt.RLock()
 	defer users.mt.RUnlock()

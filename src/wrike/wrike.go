@@ -1,6 +1,8 @@
 package wrike
 
 import (
+	"fmt"
+
 	wrike "github.com/pierreboissinot/go-wrike"
 )
 
@@ -49,6 +51,20 @@ func (c *Client) GetUsers() []Data {
 	})
 
 	return d
+}
+
+func GetUserIDByToken(token string) string {
+	fmt.Println(token)
+	api := wrike.NewClient(nil, token)
+	req, _ := api.NewRequest("GET", "account", nil)
+
+	u := new(struct {
+		Data []struct {
+			ID string
+		}
+	})
+	api.Do(req, u)
+	return u.Data[0].ID
 }
 
 func GetActiveTasksByUser() {
