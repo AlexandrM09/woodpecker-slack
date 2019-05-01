@@ -3,6 +3,7 @@ package checker
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"../slack"
 	"../users"
@@ -14,7 +15,12 @@ func Start(wg *sync.WaitGroup, users *users.Users, api *wrike.Client, apiM *slac
 	defer wg.Done()
 
 	fmt.Println("Checker started!")
+
+	date := time.Now().UTC()
 	updateUsers(users, api, apiM)
+	for _, user := range users.GetUsers() {
+		fmt.Println(api.GetOutdatedTasksByUser(string(user.WrikeID), date))
+	}
 }
 
 func updateUsers(us *users.Users, api *wrike.Client, apiM *slack.Client) {

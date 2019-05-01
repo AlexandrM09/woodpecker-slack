@@ -85,3 +85,13 @@ func (users *Users) FindByWrikeID(wrikeID WrikeID) *User {
 	}
 	return nil
 }
+
+func (users *Users) GetUsers() []*User {
+	users.mt.RLock()
+	defer users.mt.RUnlock()
+
+	tmp := make([]*User, len(users.users))
+	copy(tmp, users.users)
+
+	return tmp
+}

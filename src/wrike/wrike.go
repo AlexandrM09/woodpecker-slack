@@ -2,12 +2,15 @@ package wrike
 
 import (
 	"fmt"
+	"time"
 
 	wrike "github.com/pierreboissinot/go-wrike"
 )
 
 type Client struct {
-	api *wrike.Client
+	api          *wrike.Client
+	statusToName map[string]string
+	nameToStatus map[string]string
 }
 
 type users struct {
@@ -38,7 +41,35 @@ func filter(vs []Data, f func(Data) bool) []Data {
 }
 
 func New(token string) *Client {
-	return &Client{api: wrike.NewClient(nil, token)}
+	client := &Client{
+		api:          wrike.NewClient(nil, token),
+		nameToStatus: make(map[string]string),
+		statusToName: make(map[string]string),
+	}
+
+	data := new(struct {
+		Data []struct {
+			Name           string
+			CustomStatuses []struct {
+				ID   string
+				Name string
+			}
+		}
+	})
+
+	req, _ := client.api.NewRequest("GET", "workflows", nil)
+	client.api.Do(req, data)
+
+	for _, workflow := range data.Data {
+		if workflow.Name == "Default Workflow" {
+			for _, status := range workflow.CustomStatuses {
+				client.nameToStatus[status.Name] = status.ID
+				client.statusToName[status.ID] = status.Name
+			}
+		}
+	}
+
+	return client
 }
 
 func (c *Client) GetUsers() []Data {
@@ -67,8 +98,42 @@ func GetUserIDByToken(token string) string {
 	return u.Data[0].ID
 }
 
-func GetActiveTasksByUser() {
+type Task struct {
+	ID             string
+	Title          string
+	CustomStatus   string
+	CustomStatusID string
+	UpdatedDate    string
+}
 
+type taskParams struct {
+	Responsibles   string `url:"responsibles"`
+	CustomStatuses string `url:"customStatuses"`
+	UpdatedDate    string `url:"updatedDate"`
+}
+
+type tasksResponse struct {
+	Data []Task
+}
+
+func (c *Client) GetOutdatedTasksByUser(id string, date time.Time) []Task {
+	var params taskParams
+	params.Responsibles = "[" + id + "]"
+	params.CustomStatuses = "[" + c.nameToStatus["In Progress"] + "]"
+	params.UpdatedDate = "{\"end\":\"" + date.Format("2006-01-02T15:04:05Z") + "\"}"
+
+	req, _ := c.api.NewRequest("GET", "tasks", params)
+	resp := new(tasksResponse)
+	_, err := c.api.Do(req, resp)
+	if err != nil {
+		panic(err)
+	}
+
+	for i := 0; i < len(resp.Data); i++ {
+		resp.Data[i].CustomStatus = c.statusToName[resp.Data[i].CustomStatusID]
+	}
+
+	return resp.Data
 }
 
 func GetPotentialTasksByUser() {
