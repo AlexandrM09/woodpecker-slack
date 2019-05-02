@@ -120,7 +120,7 @@ func (c *Client) GetOutdatedTasksByUser(id string, date time.Time) []Task {
 	var params taskParams
 	params.Responsibles = "[" + id + "]"
 	params.CustomStatuses = "[" + c.nameToStatus["In Progress"] + "]"
-	params.UpdatedDate = "{\"end\":\"" + date.Format("2006-01-02T15:04:05Z") + "\"}"
+	params.UpdatedDate = "{\"end\":\"" + date.UTC().Format("2006-01-02T15:04:05Z") + "\"}"
 
 	req, _ := c.api.NewRequest("GET", "tasks", params)
 	resp := new(tasksResponse)
@@ -136,6 +136,26 @@ func (c *Client) GetOutdatedTasksByUser(id string, date time.Time) []Task {
 	return resp.Data
 }
 
-func GetPotentialTasksByUser() {
+func (c *Client) GetTasksInProgressByUser(id string) []Task {
+	return c.GetOutdatedTasksByUser(id, time.Now())
+}
 
+func (c *Client) GetPotentialTasksByUser(id string) []Task {
+	var params taskParams
+	params.Responsibles = "[" + id + "]"
+	params.CustomStatuses = "[" + c.nameToStatus["New"] + "]"
+	params.UpdatedDate = "{}"
+
+	req, _ := c.api.NewRequest("GET", "tasks", params)
+	resp := new(tasksResponse)
+	_, err := c.api.Do(req, resp)
+	if err != nil {
+		panic(err)
+	}
+
+	for i := 0; i < len(resp.Data); i++ {
+		resp.Data[i].CustomStatus = c.statusToName[resp.Data[i].CustomStatusID]
+	}
+
+	return resp.Data
 }
