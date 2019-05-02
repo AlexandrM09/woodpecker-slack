@@ -8,12 +8,13 @@ import (
 	"../config"
 	"../slack"
 	musers "../users"
+	"../wrike"
 )
 
 var api *slack.Client
 
 // Start starts the bot
-func Start(wg *sync.WaitGroup, users *musers.Users, api *slack.Client, config *config.Config) {
+func Start(wg *sync.WaitGroup, users *musers.Users, api *wrike.Client, apiM *slack.Client, config *config.Config) {
 	defer wg.Done()
 
 	fmt.Println("Bot started!")
@@ -29,30 +30,30 @@ func Start(wg *sync.WaitGroup, users *musers.Users, api *slack.Client, config *c
 	// Перевести задачу на другого пользователя
 	pattern5 := regexp.MustCompile(`^Перевести задачу (\S+) на пользователя (\S+)$`)
 
-	for message := range api.GetMessages() {
+	for message := range apiM.GetMessages() {
 		user := users.FindBySlackID(musers.SlackID(message.User))
 		user.SlackChannal = string(message.Channel)
 		// if user.OauthToken == "" {
 		if false {
-			api.SendMessage("Need oauth https://www.wrike.com/oauth2/authorize/v4?client_id="+config.Wrike.ID+"&response_type=code", message.Channel)
+			apiM.SendMessage("Need oauth https://www.wrike.com/oauth2/authorize/v4?client_id="+config.Wrike.ID+"&response_type=code", message.Channel)
 		} else {
 			if match := pattern.FindStringSubmatch(message.Text); match != nil {
-				api.SendMessage("Comment on task "+match[2]+" left", message.Channel)
+				apiM.SendMessage("Comment on task "+match[2]+" left", message.Channel)
 
 			} else if match := pattern2.FindStringSubmatch(message.Text); match != nil {
-				api.SendMessage("Comment on task "+match[3]+" left", message.Channel)
+				apiM.SendMessage("Comment on task "+match[3]+" left", message.Channel)
 
 			} else if match := pattern3.FindStringSubmatch(message.Text); match != nil {
-				api.SendMessage("Take task "+match[1], message.Channel)
+				apiM.SendMessage("Take task "+match[1], message.Channel)
 
 			} else if match := pattern4.FindStringSubmatch(message.Text); match != nil {
-				api.SendMessage("Task "+match[1]+" finished", message.Channel)
+				apiM.SendMessage("Task "+match[1]+" finished", message.Channel)
 
 			} else if match := pattern5.FindStringSubmatch(message.Text); match != nil {
-				api.SendMessage("Moved task "+match[1]+" on user "+match[2], message.Channel)
+				apiM.SendMessage("Moved task "+match[1]+" on user "+match[2], message.Channel)
 
 			} else {
-				api.SendMessage("Unrecongonized command", message.Channel)
+				apiM.SendMessage("Unrecongonized command", message.Channel)
 			}
 		}
 	}

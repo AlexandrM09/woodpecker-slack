@@ -29,7 +29,7 @@ func main() {
 	wg.Add(3)
 
 	go oauth.Start(&wg, usersStorage, config)
-	go bot.Start(&wg, usersStorage, apiMessenger, config)
+	go bot.Start(&wg, usersStorage, apiTaskmanager, apiMessenger, config)
 	go checker.Start(&wg, usersStorage, apiTaskmanager, apiMessenger)
 
 	wg.Wait()
