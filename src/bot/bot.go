@@ -38,7 +38,12 @@ func Start(wg *sync.WaitGroup, users *musers.Users, api *wrike.Client, apiM *sla
 			apiM.SendMessage("Need oauth https://www.wrike.com/oauth2/authorize/v4?client_id="+config.Wrike.ID+"&response_type=code", message.Channel)
 		} else {
 			if match := pattern.FindStringSubmatch(message.Text); match != nil {
-				apiM.SendMessage("Comment on task "+match[2]+" left", message.Channel)
+				ok, err := api.CommentTask(match[2], match[1])
+				if ok {
+					apiM.SendMessage("Comment on task "+match[2]+" left", message.Channel)
+				} else {
+					apiM.SendMessage("Error: "+err.Error(), message.Channel)
+				}
 
 			} else if match := pattern2.FindStringSubmatch(message.Text); match != nil {
 				apiM.SendMessage("Comment on task "+match[3]+" left", message.Channel)

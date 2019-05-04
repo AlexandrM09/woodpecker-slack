@@ -52,11 +52,12 @@ func updateUsers(us *users.Users, api *wrike.Client, apiM *slack.Client) {
 }
 
 func checkWeekends(date time.Time) bool {
-	weekday := date.Weekday()
-	if weekday == 0 || weekday == 6 {
-		return true
-	}
 	return false
+	// weekday := date.Weekday()
+	// if weekday == 0 || weekday == 6 {
+	// 	return true
+	// }
+	// return false
 }
 
 func processUser(user *users.User, date time.Time, api *wrike.Client, apiM *slack.Client) {
@@ -64,7 +65,11 @@ func processUser(user *users.User, date time.Time, api *wrike.Client, apiM *slac
 	if len(tasks) != 0 {
 		tasks = api.GetOutdatedTasksByUser(string(user.WrikeID), date)
 		if len(tasks) != 0 {
-			apiM.SendMessage("You have some outdated tasks", slack.ChannelID(user.SlackChannal))
+			s := "You have some outdated tasks: \n"
+			for _, task := range tasks {
+				s += "- " + task.ID + ": " + task.Title + "\n"
+			}
+			apiM.SendMessage(s, slack.ChannelID(user.SlackChannal))
 		} else {
 			apiM.SendMessage("Everything is ok", slack.ChannelID(user.SlackChannal))
 		}

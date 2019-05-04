@@ -1,7 +1,11 @@
 package wrike
 
 import (
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/url"
+	"strings"
 	"time"
 
 	wrike "github.com/pierreboissinot/go-wrike"
@@ -158,4 +162,32 @@ func (c *Client) GetPotentialTasksByUser(id string) []Task {
 	}
 
 	return resp.Data
+}
+
+func (c *Client) CommentTask(id, comment string) (bool, error) {
+	req, err := c.api.NewRequest("POST", "tasks/"+id+"/comments", nil)
+	if err != nil {
+		return false, err
+	}
+	form := url.Values{"text": {comment}, "plainText": {"true"}}.Encode()
+	req.Body = ioutil.NopCloser(strings.NewReader(form))
+	req.ContentLength = int64(len(form))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	resp := new(struct {
+		Error            string
+		ErrorDescription string
+	})
+
+	_, err = c.api.Do(req, resp)
+	if err != nil {
+		return false, err
+	}
+
+	if resp.Error != "" {
+		fmt.Println(resp)
+		return false, errors.New(resp.ErrorDescription)
+	}
+
+	return true, nil
 }
