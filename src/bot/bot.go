@@ -46,10 +46,25 @@ func Start(wg *sync.WaitGroup, users *musers.Users, api *wrike.Client, apiM *sla
 				}
 
 			} else if match := pattern2.FindStringSubmatch(message.Text); match != nil {
-				apiM.SendMessage("Comment on task "+match[3]+" left", message.Channel)
+				ok, err := api.CommentTask(match[3], match[2])
+				if ok {
+					apiM.SendMessage("Comment on task "+match[3]+" left", message.Channel)
+				} else {
+					apiM.SendMessage("Error: "+err.Error(), message.Channel)
+				}
 
 			} else if match := pattern3.FindStringSubmatch(message.Text); match != nil {
-				apiM.SendMessage("Take task "+match[1], message.Channel)
+				ok, err := api.TakeTask(string(user.WrikeID), match[1])
+				if ok {
+					ok, err = api.CommentTask(match[3], match[2])
+					if ok {
+						apiM.SendMessage("Took task "+match[1], message.Channel)
+					} else {
+						apiM.SendMessage("Error: "+err.Error(), message.Channel)
+					}
+				} else {
+					apiM.SendMessage("Error: "+err.Error(), message.Channel)
+				}
 
 			} else if match := pattern4.FindStringSubmatch(message.Text); match != nil {
 				apiM.SendMessage("Task "+match[1]+" finished", message.Channel)

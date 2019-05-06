@@ -76,7 +76,11 @@ func processUser(user *users.User, date time.Time, api *wrike.Client, apiM *slac
 	} else {
 		tasks = api.GetPotentialTasksByUser(string(user.WrikeID))
 		if len(tasks) != 0 {
-			apiM.SendMessage("You don't have any tasks in progress. Choose one:", slack.ChannelID(user.SlackChannal))
+			s := "You don't have any tasks in progress. Choose one:\n"
+			for _, task := range tasks {
+				s += "- " + task.ID + ": " + task.Title + "\n"
+			}
+			apiM.SendMessage(s, slack.ChannelID(user.SlackChannal))
 		} else {
 			apiM.SendMessage("You don't have any tasks ;(", slack.ChannelID(user.SlackChannal))
 		}
