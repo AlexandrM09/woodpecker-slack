@@ -67,10 +67,20 @@ func Start(wg *sync.WaitGroup, users *musers.Users, api *wrike.Client, apiM *sla
 				}
 
 			} else if match := pattern4.FindStringSubmatch(message.Text); match != nil {
-				apiM.SendMessage("Task "+match[1]+" finished", message.Channel)
+				ok, err := api.FinishTask(match[1])
+				if ok {
+					apiM.SendMessage("Task "+match[1]+" finished", message.Channel)
+				} else {
+					apiM.SendMessage("Error: "+err.Error(), message.Channel)
+				}
 
 			} else if match := pattern5.FindStringSubmatch(message.Text); match != nil {
-				apiM.SendMessage("Moved task "+match[1]+" on user "+match[2], message.Channel)
+				ok, err := api.MoveTask(match[1], match[2])
+				if ok {
+					apiM.SendMessage("Moved task "+match[1]+" on user "+match[2], message.Channel)
+				} else {
+					apiM.SendMessage("Error: "+err.Error(), message.Channel)
+				}
 
 			} else {
 				apiM.SendMessage("Unrecongonized command", message.Channel)
