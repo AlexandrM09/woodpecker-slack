@@ -46,7 +46,7 @@ func Start(wg *sync.WaitGroup, users *musers.Users, api *wrike.Client, apiM *sla
 				}
 
 			} else if match := pattern2.FindStringSubmatch(message.Text); match != nil {
-				ok, err := api.CommentTask(match[3], match[2])
+				ok, err := api.CommentTask(match[3], "Time: "+match[1]+" hours, comment: "+match[2])
 				if ok {
 					apiM.SendMessage("Comment on task "+match[3]+" left", message.Channel)
 				} else {
