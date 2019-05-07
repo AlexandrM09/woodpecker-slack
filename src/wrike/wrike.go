@@ -291,5 +291,55 @@ func (c *Client) FinishTask(taskid string) (bool, error) {
 }
 
 func (c *Client) MoveTask(taskid, userid string) (bool, error) {
+	// query task
+	req1, err := c.api.NewRequest("GET", "tasks/"+taskid, nil)
+	if err != nil {
+		return false, err
+	}
+	resp1 := new(struct {
+		Error            string
+		ErrorDescription string
+		Data             []struct {
+			ResponsibleIDs []string
+		}
+	})
+	_, err = c.api.Do(req1, resp1)
+	if err != nil {
+		return false, err
+	}
+
+	if resp1.Error != "" {
+		return false, errors.New(resp1.ErrorDescription)
+	}
+
+	needToDelete := resp1.Data[0].ResponsibleIDs
+
+	// remove responsibles and change status
+	req2, err := c.api.NewRequest("PUT", "tasks/"+taskid, nil)
+	if err != nil {
+		return false, err
+	}
+
+	form := url.Values{"removeResponsibles": {"[" + strings.Join(needToDelete, ", ") + "]"}, "addResponsibles": {"[" + userid + "]"}}.Encode()
+	req2.Body = ioutil.NopCloser(strings.NewReader(form))
+	req2.ContentLength = int64(len(form))
+	req2.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	fmt.Println(form)
+
+	resp2 := new(struct {
+		Error            string
+		ErrorDescription string
+	})
+
+	_, err = c.api.Do(req2, resp2)
+	if err != nil {
+		return false, err
+	}
+
+	if resp2.Error != "" {
+		return false, errors.New(resp2.ErrorDescription)
+	}
+
 	return true, nil
 }
