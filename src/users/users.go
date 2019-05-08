@@ -2,6 +2,8 @@ package users
 
 import (
 	"sync"
+
+	bolt "github.com/boltdb/bolt"
 )
 
 // MaxUsersCount means how many users can accommodate a users storage
@@ -27,8 +29,10 @@ func (e *DuplicateError) Error() string {
 
 // Users is the storage of all known users.
 type Users struct {
-	mt    sync.RWMutex
-	users []*User
+	mt     sync.RWMutex
+	dbFile string
+	db     *bolt.DB
+	users  []*User
 }
 
 // User is an abstraction over a user with accounts in jira and slack
@@ -42,8 +46,18 @@ type User struct {
 }
 
 // New creates new users storage
-func New() *Users {
-	return &Users{users: make([]*User, 0, MaxUsersCount)}
+func New(dbFile string) *Users {
+	users := &Users{users: make([]*User, 0, MaxUsersCount), dbFile: dbFile}
+
+	if dbFile != "" {
+		db, err := bolt.Open(dbFile, 0600, nil)
+		if err != nil {
+			return nil
+		}
+		users.db = db
+	}
+
+	return users
 }
 
 // AddUser adds user to storage
@@ -94,4 +108,8 @@ func (users *Users) GetUsers() []*User {
 	copy(tmp, users.users)
 
 	return tmp
+}
+
+func (users *Users) Sync() error {
+
 }
