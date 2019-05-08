@@ -1,6 +1,8 @@
 package users
 
 import (
+	"bytes"
+	"encoding/gob"
 	"sync"
 
 	bolt "github.com/boltdb/bolt"
@@ -57,6 +59,7 @@ func New(dbFile string) *Users {
 		users.db = db
 	}
 
+	gob.Register(User{})
 	return users
 }
 
@@ -111,5 +114,29 @@ func (users *Users) GetUsers() []*User {
 }
 
 func (users *Users) Sync() error {
+	users.mt.RLock()
+	defer users.mt.RUnlock()
+	users.db.Update(func(tx *bolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists([]byte("users"))
+		if err != nil {
+			return err
+		}
 
+		for _, user := range users.users {
+			b := bytes.Buffer{}
+			e := gob.NewEncoder(&b)
+			err := e.Encode("")
+			if err != nil {
+				return err
+			}
+
+			bucket.Put([]byte(user.WrikeID), b.Bytes())
+		}
+		return nil
+	})
+	return nil
+}
+
+func (users *Users) Close() {
+	users.db.Close()
 }
