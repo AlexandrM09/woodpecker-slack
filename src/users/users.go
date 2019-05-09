@@ -3,6 +3,7 @@ package users
 import (
 	"bytes"
 	"encoding/gob"
+	"errors"
 	"sync"
 
 	bolt "github.com/boltdb/bolt"
@@ -57,6 +58,10 @@ func New(dbFile string) *Users {
 			return nil
 		}
 		users.db = db
+		err = users.Load()
+		if err != nil {
+			return nil
+		}
 	}
 
 	gob.Register(User{})
@@ -139,4 +144,30 @@ func (users *Users) Sync() error {
 
 func (users *Users) Close() {
 	users.db.Close()
+}
+
+func (users *Users) Load() error {
+	users.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte("users"))
+		if bucket == nil {
+			return errors.New("No bucket")
+		}
+
+		err := bucket.ForEach(func(k []byte, v []byte) error {
+			var user User
+			b := bytes.Buffer{}
+			b.Write(v)
+			d := gob.NewDecoder(&b)
+			err := d.Decode(&user)
+			if err != nil {
+				return err
+			}
+			users.AddUser(&user)
+			return nil
+		})
+
+		return err
+	})
+
+	return nil
 }
