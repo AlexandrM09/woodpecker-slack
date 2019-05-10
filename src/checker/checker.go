@@ -48,7 +48,7 @@ func updateUsers(us *users.Users, api *wrike.Client, apiM *slack.Client) {
 		slackID, _ := apiM.GetIDByEmail(user.Profiles[0].Email)
 		newUser := &users.User{WrikeID: users.WrikeID(user.ID), Email: user.Profiles[0].Email, SlackID: users.SlackID(slackID)}
 		fmt.Println(newUser)
-		us.AddUser(newUser)
+		us.AddUserIfNotExist(newUser)
 	}
 }
 

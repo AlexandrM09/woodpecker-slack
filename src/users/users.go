@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"sync"
 
 	bolt "github.com/boltdb/bolt"
@@ -50,6 +51,7 @@ type User struct {
 
 // New creates new users storage
 func New(dbFile string) *Users {
+	gob.Register(User{})
 	users := &Users{users: make([]*User, 0, MaxUsersCount), dbFile: dbFile}
 
 	if dbFile != "" {
@@ -64,22 +66,30 @@ func New(dbFile string) *Users {
 		}
 	}
 
-	gob.Register(User{})
 	return users
 }
 
 // AddUser adds user to storage
-func (users *Users) AddUser(user *User) error {
+func (users *Users) AddUser(user *User, sync bool) error {
 	users.mt.Lock()
-	defer users.mt.Unlock()
 
 	for _, u := range users.users {
-		if u.SlackID == user.SlackID || u.WrikeID == u.WrikeID {
+		if u.SlackID == user.SlackID || u.WrikeID == user.WrikeID {
+			users.mt.Unlock()
 			return &DuplicateError{"User already exist"}
 		}
 	}
 	users.users = append(users.users, user)
+
+	users.mt.Unlock()
+	if sync {
+		return users.Sync()
+	}
 	return nil
+}
+
+func (users *Users) AddUserIfNotExist(user *User) {
+	users.AddUser(user, true)
 }
 
 // FindBySlackID finds user by slack id
@@ -119,9 +129,13 @@ func (users *Users) GetUsers() []*User {
 }
 
 func (users *Users) Sync() error {
+	if users.db == nil {
+		return errors.New("No database")
+	}
 	users.mt.RLock()
 	defer users.mt.RUnlock()
-	users.db.Update(func(tx *bolt.Tx) error {
+
+	err := users.db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte("users"))
 		if err != nil {
 			return err
@@ -130,16 +144,18 @@ func (users *Users) Sync() error {
 		for _, user := range users.users {
 			b := bytes.Buffer{}
 			e := gob.NewEncoder(&b)
-			err := e.Encode("")
+			err := e.Encode(user)
 			if err != nil {
 				return err
 			}
 
+			// fmt.Println(b.Bytes())
 			bucket.Put([]byte(user.WrikeID), b.Bytes())
 		}
 		return nil
 	})
-	return nil
+
+	return err
 }
 
 func (users *Users) Close() {
@@ -147,6 +163,10 @@ func (users *Users) Close() {
 }
 
 func (users *Users) Load() error {
+	if users.db == nil {
+		return errors.New("No database")
+	}
+
 	users.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("users"))
 		if bucket == nil {
@@ -162,12 +182,14 @@ func (users *Users) Load() error {
 			if err != nil {
 				return err
 			}
-			users.AddUser(&user)
+			users.AddUser(&user, false)
 			return nil
 		})
 
 		return err
 	})
 
+	fmt.Println("Here")
+	fmt.Println(users.users)
 	return nil
 }
