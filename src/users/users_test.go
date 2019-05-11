@@ -3,7 +3,7 @@ package users
 import "testing"
 
 func TestNew(t *testing.T) {
-	users := New()
+	users := New("")
 
 	if users == nil {
 		t.Error("New created nil object")
@@ -17,7 +17,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestAddUser(t *testing.T) {
-	users := New()
+	users := New("")
 
 	if len(users.users) != 0 {
 		t.Error("Was created not clear storage")
@@ -50,7 +50,7 @@ func TestAddUser(t *testing.T) {
 
 func TestFindBySlackID(t *testing.T) {
 	const slackID = "U0G9QF9C6"
-	users := New()
+	users := New("")
 
 	if users.FindBySlackID(slackID) != nil {
 		t.Error("Found non-existent user")
@@ -68,7 +68,7 @@ func TestFindBySlackID(t *testing.T) {
 
 func TestFindByJiraID(t *testing.T) {
 	const wrikeID = "5ac5326a95d30150501e5ff4"
-	users := New()
+	users := New("")
 
 	if users.FindByWrikeID(wrikeID) != nil {
 		t.Error("Found non-existent user")
