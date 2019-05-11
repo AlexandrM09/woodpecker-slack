@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
-	"fmt"
 	"sync"
 
 	bolt "github.com/boltdb/bolt"
@@ -167,7 +166,7 @@ func (users *Users) Load() error {
 		return errors.New("No database")
 	}
 
-	users.db.View(func(tx *bolt.Tx) error {
+	err := users.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("users"))
 		if bucket == nil {
 			return errors.New("No bucket")
@@ -189,7 +188,5 @@ func (users *Users) Load() error {
 		return err
 	})
 
-	fmt.Println("Here")
-	fmt.Println(users.users)
-	return nil
+	return err
 }
