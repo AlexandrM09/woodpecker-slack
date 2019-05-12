@@ -32,6 +32,8 @@ type Data struct {
 
 type profile struct {
 	Email string
+	Admin bool
+	Owner bool
 }
 
 func filter(vs []Data, f func(Data) bool) []Data {

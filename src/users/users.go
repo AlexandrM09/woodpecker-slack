@@ -40,12 +40,14 @@ type Users struct {
 
 // User is an abstraction over a user with accounts in jira and slack
 type User struct {
-	SlackID      SlackID
-	WrikeID      WrikeID
-	OauthToken   OauthToken
-	RefreshToken string
-	SlackChannal string
-	Email        string
+	SlackID         SlackID
+	WrikeID         WrikeID
+	OauthToken      OauthToken
+	RefreshToken    string
+	SlackChannal    string
+	Email           string
+	IsAdmin         bool
+	ManagedProjects []string
 }
 
 // New creates new users storage
