@@ -46,7 +46,7 @@ func updateUsers(us *users.Users, api *wrike.Client, apiM *slack.Client) {
 
 	for _, user := range serverUsers {
 		slackID, _ := apiM.GetIDByEmail(user.Profiles[0].Email)
-		newUser := &users.User{WrikeID: users.WrikeID(user.ID), Email: user.Profiles[0].Email, SlackID: users.SlackID(slackID), IsAdmin: user.Profiles[0].Admin || user.Profiles[0].Owner}
+		newUser := &users.User{WrikeID: users.WrikeID(user.ID), Email: user.Profiles[0].Email, SlackID: users.SlackID(slackID), IsAdmin: user.Profiles[0].Admin || user.Profiles[0].Owner, ManagedProjects: make([]string, 0)}
 		fmt.Println(newUser)
 		us.AddUserIfNotExist(newUser)
 	}
@@ -85,5 +85,20 @@ func processUser(user *users.User, date time.Time, api *wrike.Client, apiM *slac
 		} else {
 			apiM.SendMessage("You don't have any tasks ;(", slack.ChannelID(user.SlackChannal))
 		}
+	}
+
+	if len(user.ManagedProjects) > 0 {
+		tasks := api.GetOutlastedTasksWithouUser()
+		if len(tasks) > 0 {
+			// ,,,
+		}
+		tasks = api.GetVeryOutdatedTasks()
+		if len(tasks) > 0 {
+			// ...
+		}
+	}
+
+	if user.IsAdmin {
+		projects := api.GetProjectsWithoutManager()
 	}
 }
