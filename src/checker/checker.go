@@ -88,7 +88,7 @@ func processUser(user *users.User, date time.Time, api *wrike.Client, apiM *slac
 	}
 
 	if len(user.ManagedProjects) > 0 {
-		tasks := api.GetOutlastedTasksWithouUser()
+		tasks := api.GetOutlastedTasksWithoutUser()
 		if len(tasks) > 0 {
 			// ,,,
 		}
@@ -100,5 +100,9 @@ func processUser(user *users.User, date time.Time, api *wrike.Client, apiM *slac
 
 	if user.IsAdmin {
 		projects := api.GetProjectsWithoutManager()
+
+		if len(projects) > 0 {
+			// ...
+		}
 	}
 }

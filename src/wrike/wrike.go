@@ -345,3 +345,15 @@ func (c *Client) MoveTask(taskid, userid string) (bool, error) {
 
 	return true, nil
 }
+
+func (c *Client) GetOutlastedTasksWithoutUser() {
+
+}
+
+func (c *Client) GetVeryOutdatedTasks() {
+
+}
+
+func (c *Client) GetProjects() {
+
+}
