@@ -388,6 +388,30 @@ func (c *Client) GetVeryOutdatedTasks(date time.Time) []Task {
 	return resp.Data
 }
 
-func (c *Client) GetProjects() {
+func (c *Client) GetProjects() []struct {
+	ID    string
+	Title string
+} {
+	var params struct {
+		Project bool `url:"project"`
+		Deleted bool `url:"deleted"`
+	}
 
+	params.Project = true
+	params.Deleted = false
+
+	req, _ := c.api.NewRequest("GET", "/folders", params)
+	resp := new(struct {
+		Data []struct {
+			ID    string
+			Title string
+		}
+	})
+
+	_, err := c.api.Do(req, resp)
+	if err != nil {
+		panic(err)
+	}
+
+	return resp.Data
 }
