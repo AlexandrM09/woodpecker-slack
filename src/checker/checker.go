@@ -24,18 +24,14 @@ func Start(wg *sync.WaitGroup, users *users.Users, api *wrike.Client, apiM *slac
 
 		date := time.Now()
 		if !checkWeekends(date) {
-			for {
-				date = date.AddDate(0, 0, -1)
-				if !checkWeekends(date) {
-					break
-				}
-			}
+			date = SubtractWorkday(date, 1)
+			outdated := SubtractWorkday(date, 1)
 
 			for _, user := range users.GetUsers() {
 				if user.SlackChannal == "" {
 					continue
 				}
-				go processUser(user, date, api, apiM)
+				go processUser(user, date, outdated, api, apiM)
 			}
 		}
 	}
@@ -61,7 +57,7 @@ func checkWeekends(date time.Time) bool {
 	// return false
 }
 
-func processUser(user *users.User, date time.Time, api *wrike.Client, apiM *slack.Client) {
+func processUser(user *users.User, date, outdated time.Time, api *wrike.Client, apiM *slack.Client) {
 	tasks := api.GetTasksInProgressByUser(string(user.WrikeID))
 	if len(tasks) != 0 {
 		tasks = api.GetOutdatedTasksByUser(string(user.WrikeID), date)
@@ -88,21 +84,36 @@ func processUser(user *users.User, date time.Time, api *wrike.Client, apiM *slac
 	}
 
 	if len(user.ManagedProjects) > 0 {
-		tasks := api.GetOutlastedTasksWithoutUser()
+		tasks := api.GetOutlastedTasksWithoutUser(date)
 		if len(tasks) > 0 {
 			// ,,,
 		}
-		tasks = api.GetVeryOutdatedTasks()
+
+		tasks = api.GetVeryOutdatedTasks(outdated)
 		if len(tasks) > 0 {
 			// ...
 		}
 	}
 
 	if user.IsAdmin {
-		projects := api.GetProjectsWithoutManager()
+		projects := api.GetProjects()
 
 		if len(projects) > 0 {
 			// ...
 		}
 	}
+}
+
+func SubtractWorkday(date time.Time, days int) time.Time {
+	res := date
+	for i := 0; i < days; i++ {
+		for {
+			res = res.AddDate(0, 0, -1)
+			if !checkWeekends(date) {
+				break
+			}
+		}
+	}
+
+	return res
 }
