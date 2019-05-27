@@ -98,6 +98,10 @@ func processUser(user *users.User, date, outdated time.Time, api *wrike.Client, 
 	if user.IsAdmin {
 		projects := api.GetProjects()
 
+		projects = filterProjects(projects, func(d struct{ ID, Title string }) bool {
+			return false
+		})
+
 		if len(projects) > 0 {
 			// ...
 		}
@@ -116,4 +120,14 @@ func SubtractWorkday(date time.Time, days int) time.Time {
 	}
 
 	return res
+}
+
+func filterProjects(vs []struct{ ID, Title string }, f func(struct{ ID, Title string }) bool) []struct{ ID, Title string } {
+	vsf := make([]struct{ ID, Title string }, 0)
+	for _, v := range vs {
+		if f(v) {
+			vsf = append(vsf, v)
+		}
+	}
+	return vsf
 }
