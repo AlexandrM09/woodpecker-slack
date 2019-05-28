@@ -86,12 +86,20 @@ func processUser(user *users.User, date, outdated time.Time, api *wrike.Client, 
 	if len(user.ManagedProjects) > 0 {
 		tasks := api.GetOutlastedTasksWithoutUser(date)
 		if len(tasks) > 0 {
-			// ,,,
+			s := "There is outlasted tasks without user:\n"
+			for _, task := range tasks {
+				s += "- " + task.ID + ": " + task.Title + "\n"
+			}
+			apiM.SendMessage(s, slack.ChannelID(user.SlackChannal))
 		}
 
 		tasks = api.GetVeryOutdatedTasks(outdated)
 		if len(tasks) > 0 {
-			// ...
+			s := "There is very outlasted tasks:\n"
+			for _, task := range tasks {
+				s += "- " + task.ID + ": " + task.Title + "\n"
+			}
+			apiM.SendMessage(s, slack.ChannelID(user.SlackChannal))
 		}
 	}
 
