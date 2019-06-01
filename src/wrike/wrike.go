@@ -388,10 +388,11 @@ func (c *Client) GetVeryOutdatedTasks(date time.Time) []Task {
 	return resp.Data
 }
 
-func (c *Client) GetProjects() []struct {
-	ID    string
-	Title string
-} {
+type Project struct {
+	ID, Title string
+}
+
+func (c *Client) GetProjects() []Project {
 	var params struct {
 		Project bool `url:"project"`
 		Deleted bool `url:"deleted"`
@@ -402,10 +403,7 @@ func (c *Client) GetProjects() []struct {
 
 	req, _ := c.api.NewRequest("GET", "/folders", params)
 	resp := new(struct {
-		Data []struct {
-			ID    string
-			Title string
-		}
+		Data []Project
 	})
 
 	_, err := c.api.Do(req, resp)

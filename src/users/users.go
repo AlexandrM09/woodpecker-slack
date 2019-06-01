@@ -192,3 +192,15 @@ func (users *Users) Load() error {
 
 	return err
 }
+
+func (users *Users) GetUserWithProject(id string) *User {
+	for _, user := range users.users {
+		for _, project := range user.ManagedProjects {
+			if project == id {
+				return user
+			}
+		}
+	}
+
+	return nil
+}

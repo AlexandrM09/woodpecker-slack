@@ -106,12 +106,16 @@ func processUser(user *users.User, date, outdated time.Time, api *wrike.Client, 
 	if user.IsAdmin {
 		projects := api.GetProjects()
 
-		projects = filterProjects(projects, func(d struct{ ID, Title string }) bool {
-			return false
+		projects = filterProjects(projects, func(d wrike.Project) bool {
+			return users.GetUserWithProject(d.ID) != nil
 		})
 
 		if len(projects) > 0 {
-			// ...
+			s := "There is projects without manager:\n"
+			for _, project := range projects {
+				s += "- " + project.ID + ": " + project.Title + "\n"
+			}
+			apiM.SendMessage(s, slack.ChannelID(user.SlackChannal))
 		}
 	}
 }
@@ -130,8 +134,8 @@ func SubtractWorkday(date time.Time, days int) time.Time {
 	return res
 }
 
-func filterProjects(vs []struct{ ID, Title string }, f func(struct{ ID, Title string }) bool) []struct{ ID, Title string } {
-	vsf := make([]struct{ ID, Title string }, 0)
+func filterProjects(vs []wrike.Project, f func(wrike.Project) bool) []wrike.Project {
+	vsf := make([]wrike.Project, 0)
 	for _, v := range vs {
 		if f(v) {
 			vsf = append(vsf, v)
