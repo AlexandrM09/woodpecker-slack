@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"sync"
 
 	bolt "github.com/boltdb/bolt"
@@ -64,6 +65,9 @@ func New(dbFile string) *Users {
 		users.Load()
 	}
 
+	for _, user := range users.users {
+		fmt.Println(user)
+	}
 	return users
 }
 
