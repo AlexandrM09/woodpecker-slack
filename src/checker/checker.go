@@ -31,7 +31,7 @@ func Start(wg *sync.WaitGroup, users *users.Users, api *wrike.Client, apiM *slac
 				if user.SlackChannal == "" {
 					continue
 				}
-				go processUser(user, date, outdated, api, apiM)
+				go processUser(user, users, date, outdated, api, apiM)
 			}
 		}
 	}
@@ -57,7 +57,7 @@ func checkWeekends(date time.Time) bool {
 	// return false
 }
 
-func processUser(user *users.User, date, outdated time.Time, api *wrike.Client, apiM *slack.Client) {
+func processUser(user *users.User, us *users.Users, date, outdated time.Time, api *wrike.Client, apiM *slack.Client) {
 	tasks := api.GetTasksInProgressByUser(string(user.WrikeID))
 	if len(tasks) != 0 {
 		tasks = api.GetOutdatedTasksByUser(string(user.WrikeID), date)
@@ -103,11 +103,12 @@ func processUser(user *users.User, date, outdated time.Time, api *wrike.Client, 
 		}
 	}
 
+	fmt.Println(user)
 	if user.IsAdmin {
 		projects := api.GetProjects()
 
 		projects = filterProjects(projects, func(d wrike.Project) bool {
-			return users.GetUserWithProject(d.ID) != nil
+			return us.GetUserWithProject(d.ID) != nil
 		})
 
 		if len(projects) > 0 {
