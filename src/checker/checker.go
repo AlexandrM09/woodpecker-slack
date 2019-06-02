@@ -103,13 +103,13 @@ func processUser(user *users.User, us *users.Users, date, outdated time.Time, ap
 		}
 	}
 
-	fmt.Println(user)
 	if user.IsAdmin {
 		projects := api.GetProjects()
 
 		projects = filterProjects(projects, func(d wrike.Project) bool {
-			return us.GetUserWithProject(d.ID) != nil
+			return us.GetUserWithProject(d.ID) == nil
 		})
+		fmt.Println(projects)
 
 		if len(projects) > 0 {
 			s := "There is projects without manager:\n"

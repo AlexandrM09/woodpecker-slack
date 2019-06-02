@@ -61,10 +61,7 @@ func New(dbFile string) *Users {
 			return nil
 		}
 		users.db = db
-		err = users.Load()
-		if err != nil {
-			return nil
-		}
+		users.Load()
 	}
 
 	return users
