@@ -37,8 +37,10 @@ func Start(wg *sync.WaitGroup, users *musers.Users, api *wrike.Client, apiM *sla
 			// if false {
 			apiM.SendMessage("Need oauth https://www.wrike.com/oauth2/authorize/v4?client_id="+config.Wrike.ID+"&response_type=code", message.Channel)
 		} else {
+			apiU := api.FromOAuth(user)
+			users.Sync()
 			if match := pattern.FindStringSubmatch(message.Text); match != nil {
-				ok, err := api.CommentTask(match[2], match[1])
+				ok, err := apiU.CommentTask(match[2], match[1])
 				if ok {
 					apiM.SendMessage("Comment on task "+match[2]+" left", message.Channel)
 				} else {
@@ -46,7 +48,7 @@ func Start(wg *sync.WaitGroup, users *musers.Users, api *wrike.Client, apiM *sla
 				}
 
 			} else if match := pattern2.FindStringSubmatch(message.Text); match != nil {
-				ok, err := api.CommentTask(match[3], "Time: "+match[1]+" hours, comment: "+match[2])
+				ok, err := apiU.CommentTask(match[3], "Time: "+match[1]+" hours, comment: "+match[2])
 				if ok {
 					apiM.SendMessage("Comment on task "+match[3]+" left", message.Channel)
 				} else {
@@ -54,9 +56,9 @@ func Start(wg *sync.WaitGroup, users *musers.Users, api *wrike.Client, apiM *sla
 				}
 
 			} else if match := pattern3.FindStringSubmatch(message.Text); match != nil {
-				ok, err := api.TakeTask(string(user.WrikeID), match[1])
+				ok, err := apiU.TakeTask(string(user.WrikeID), match[1])
 				if ok {
-					ok, err = api.CommentTask(match[1], match[2])
+					ok, err = apiU.CommentTask(match[1], match[2])
 					if ok {
 						apiM.SendMessage("Took task "+match[1], message.Channel)
 					} else {
@@ -67,7 +69,7 @@ func Start(wg *sync.WaitGroup, users *musers.Users, api *wrike.Client, apiM *sla
 				}
 
 			} else if match := pattern4.FindStringSubmatch(message.Text); match != nil {
-				ok, err := api.FinishTask(match[1])
+				ok, err := apiU.FinishTask(match[1])
 				if ok {
 					apiM.SendMessage("Task "+match[1]+" finished", message.Channel)
 				} else {
@@ -75,7 +77,7 @@ func Start(wg *sync.WaitGroup, users *musers.Users, api *wrike.Client, apiM *sla
 				}
 
 			} else if match := pattern5.FindStringSubmatch(message.Text); match != nil {
-				ok, err := api.MoveTask(match[1], match[2])
+				ok, err := apiU.MoveTask(match[1], match[2])
 				if ok {
 					apiM.SendMessage("Moved task "+match[1]+" on user "+match[2], message.Channel)
 				} else {

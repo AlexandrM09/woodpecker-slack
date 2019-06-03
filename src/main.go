@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"./bot"
-	// "./checker"
+	"./checker"
 	"./config"
 	"./oauth"
 	"./slack"
@@ -22,7 +22,7 @@ func main() {
 	}
 
 	apiMessenger := slack.New(config.Slack.Token)
-	apiTaskmanager := wrike.New(config.Wrike.Token)
+	apiTaskmanager := wrike.New(config.Wrike.Token, config.Wrike.ID, config.Wrike.Secret)
 	usersStorage := users.New("woodpecker.db")
 	defer usersStorage.Close()
 
@@ -31,7 +31,7 @@ func main() {
 
 	go oauth.Start(&wg, usersStorage, config)
 	go bot.Start(&wg, usersStorage, apiTaskmanager, apiMessenger, config)
-	// go checker.Start(&wg, usersStorage, apiTaskmanager, apiMessenger)
+	go checker.Start(&wg, usersStorage, apiTaskmanager, apiMessenger)
 
 	wg.Wait()
 }
