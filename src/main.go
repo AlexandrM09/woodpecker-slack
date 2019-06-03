@@ -22,7 +22,7 @@ func main() {
 	}
 
 	apiMessenger := slack.New(config.Slack.Token)
-	apiTaskmanager := wrike.New(config.Wrike.Token)
+	apiTaskmanager := wrike.New(config.Wrike.Token, config.Wrike.ID, config.Wrike.Secret)
 	usersStorage := users.New("woodpecker.db")
 	defer usersStorage.Close()
 

@@ -19,8 +19,8 @@ func Start(wg *sync.WaitGroup, users *users.Users, api *wrike.Client, apiM *slac
 	updateUsers(users, api, apiM)
 
 	for {
-		// time.Sleep(15 * time.Minute)
-		time.Sleep(5 * time.Second)
+		time.Sleep(15 * time.Minute)
+		// time.Sleep(5 * time.Second)
 
 		date := time.Now()
 		if !checkWeekends(date) {

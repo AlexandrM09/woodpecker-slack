@@ -7,8 +7,11 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"net/http"
+	"encoding/json"
 
 	wrike "github.com/pierreboissinot/go-wrike"
+	musers "../users"
 )
 
 type Client struct {
@@ -36,6 +39,8 @@ type profile struct {
 	Owner bool
 }
 
+var id, secret string
+
 func filter(vs []Data, f func(Data) bool) []Data {
 	vsf := make([]Data, 0)
 	for _, v := range vs {
@@ -46,7 +51,9 @@ func filter(vs []Data, f func(Data) bool) []Data {
 	return vsf
 }
 
-func New(token string) *Client {
+func New(token, _id, _secret string) *Client {
+	id = _id
+	secret = _secret
 	client := &Client{
 		api:          wrike.NewClient(nil, token),
 		nameToStatus: make(map[string]string),
@@ -91,9 +98,13 @@ func (c *Client) GetUsers() []Data {
 }
 
 func GetUserIDByToken(token string) string {
-	fmt.Println(token)
+	fmt.Println("Token: " + token)
 	api := wrike.NewClient(nil, token)
-	req, _ := api.NewRequest("GET", "account", nil)
+	var data struct {
+		Me bool `url:"me"`
+	}
+	data.Me = true
+	req, _ := api.NewRequest("GET", "contacts", data)
 
 	u := new(struct {
 		Data []struct {
@@ -101,6 +112,7 @@ func GetUserIDByToken(token string) string {
 		}
 	})
 	api.Do(req, u)
+	fmt.Println(u)
 	return u.Data[0].ID
 }
 
@@ -412,4 +424,57 @@ func (c *Client) GetProjects() []Project {
 	}
 
 	return resp.Data
+}
+
+func (c *Client) FromOAuth(user *musers.User) *Client {
+	access := string(user.OauthToken)
+	refresh := user.RefreshToken
+	api := &Client{nameToStatus: c.nameToStatus, statusToName: c.statusToName}
+	api.api = wrike.NewClient(nil, access)
+
+	if !api.Check() {
+		access, refresh = Refresh(refresh)
+		user.OauthToken = musers.OauthToken(access)
+		user.RefreshToken = refresh
+		api.api = wrike.NewClient(nil, access)
+		if !api.Check() {
+			return nil
+		}
+	}
+
+	return api
+}
+
+func (c *Client) Check() bool {
+	req, _ := c.api.NewRequest("GET", "version", nil)
+
+	resp := new(struct {
+		Error string
+	})
+	c.api.Do(req, resp)
+
+	return len(resp.Error) == 0
+}
+
+func Refresh(refresh string) (string, string) {
+	resp, _ := http.PostForm("https://www.wrike.com/oauth2/token", url.Values{
+		"client_id":     {id},
+		"client_secret": {secret},
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {refresh},
+	})
+
+	byteBody, _ := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+
+	var body map[string]interface{}
+	json.Unmarshal(byteBody, &body)
+
+	if val, ok := body["error"].(string); ok {
+		fmt.Println(val)
+		fmt.Println("Error: " + body["error_description"].(string))
+		return "", ""
+	} else {
+		return body["access_token"].(string), body["refresh_token"].(string)
+	}
 }
