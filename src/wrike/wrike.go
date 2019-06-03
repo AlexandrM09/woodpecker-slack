@@ -32,6 +32,8 @@ type Data struct {
 
 type profile struct {
 	Email string
+	Admin bool
+	Owner bool
 }
 
 func filter(vs []Data, f func(Data) bool) []Data {
@@ -342,4 +344,72 @@ func (c *Client) MoveTask(taskid, userid string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (c *Client) GetOutlastedTasksWithoutUser(date time.Time) []Task {
+	var params taskParams
+	params.Responsibles = "[]"
+	params.CustomStatuses = "[" + c.nameToStatus["In Progress"] + "]"
+	params.UpdatedDate = "{\"end\":\"" + date.UTC().Format("2006-01-02T15:04:05Z") + "\"}"
+
+	req, _ := c.api.NewRequest("GET", "tasks", params)
+	resp := new(tasksResponse)
+	_, err := c.api.Do(req, resp)
+	if err != nil {
+		panic(err)
+	}
+
+	for i := 0; i < len(resp.Data); i++ {
+		resp.Data[i].CustomStatus = c.statusToName[resp.Data[i].CustomStatusID]
+	}
+
+	return resp.Data
+}
+
+func (c *Client) GetVeryOutdatedTasks(date time.Time) []Task {
+	var params struct {
+		CustomStatuses string `url:"customStatuses"`
+		UpdatedDate    string `url:"updatedDate"`
+	}
+	params.CustomStatuses = "[" + c.nameToStatus["In Progress"] + "]"
+	params.UpdatedDate = "{\"end\":\"" + date.UTC().Format("2006-01-02T15:04:05Z") + "\"}"
+
+	req, _ := c.api.NewRequest("GET", "tasks", params)
+	resp := new(tasksResponse)
+	_, err := c.api.Do(req, resp)
+	if err != nil {
+		panic(err)
+	}
+
+	for i := 0; i < len(resp.Data); i++ {
+		resp.Data[i].CustomStatus = c.statusToName[resp.Data[i].CustomStatusID]
+	}
+
+	return resp.Data
+}
+
+type Project struct {
+	ID, Title string
+}
+
+func (c *Client) GetProjects() []Project {
+	var params struct {
+		Project bool `url:"project"`
+		Deleted bool `url:"deleted"`
+	}
+
+	params.Project = true
+	params.Deleted = false
+
+	req, _ := c.api.NewRequest("GET", "/folders", params)
+	resp := new(struct {
+		Data []Project
+	})
+
+	_, err := c.api.Do(req, resp)
+	if err != nil {
+		panic(err)
+	}
+
+	return resp.Data
 }

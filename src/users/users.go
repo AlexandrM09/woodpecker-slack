@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"sync"
 
 	bolt "github.com/boltdb/bolt"
@@ -40,12 +41,14 @@ type Users struct {
 
 // User is an abstraction over a user with accounts in jira and slack
 type User struct {
-	SlackID      SlackID
-	WrikeID      WrikeID
-	OauthToken   OauthToken
-	RefreshToken string
-	SlackChannal string
-	Email        string
+	SlackID         SlackID
+	WrikeID         WrikeID
+	OauthToken      OauthToken
+	RefreshToken    string
+	SlackChannal    string
+	Email           string
+	IsAdmin         bool
+	ManagedProjects []string
 }
 
 // New creates new users storage
@@ -59,12 +62,12 @@ func New(dbFile string) *Users {
 			return nil
 		}
 		users.db = db
-		err = users.Load()
-		if err != nil {
-			return nil
-		}
+		users.Load()
 	}
 
+	for _, user := range users.users {
+		fmt.Println(user)
+	}
 	return users
 }
 
@@ -189,4 +192,16 @@ func (users *Users) Load() error {
 	})
 
 	return err
+}
+
+func (users *Users) GetUserWithProject(id string) *User {
+	for _, user := range users.users {
+		for _, project := range user.ManagedProjects {
+			if project == id {
+				return user
+			}
+		}
+	}
+
+	return nil
 }
