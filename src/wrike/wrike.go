@@ -91,9 +91,13 @@ func (c *Client) GetUsers() []Data {
 }
 
 func GetUserIDByToken(token string) string {
-	fmt.Println(token)
+	fmt.Println("Token: " + token)
 	api := wrike.NewClient(nil, token)
-	req, _ := api.NewRequest("GET", "account", nil)
+	var data struct {
+		Me bool `url:"me"`
+	}
+	data.Me = true
+	req, _ := api.NewRequest("GET", "contacts", data)
 
 	u := new(struct {
 		Data []struct {
@@ -101,6 +105,7 @@ func GetUserIDByToken(token string) string {
 		}
 	})
 	api.Do(req, u)
+	fmt.Println(u)
 	return u.Data[0].ID
 }
 

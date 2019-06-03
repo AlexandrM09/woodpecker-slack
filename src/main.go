@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"./bot"
-	"./checker"
+	// "./checker"
 	"./config"
 	"./oauth"
 	"./slack"
@@ -31,7 +31,7 @@ func main() {
 
 	go oauth.Start(&wg, usersStorage, config)
 	go bot.Start(&wg, usersStorage, apiTaskmanager, apiMessenger, config)
-	go checker.Start(&wg, usersStorage, apiTaskmanager, apiMessenger)
+	// go checker.Start(&wg, usersStorage, apiTaskmanager, apiMessenger)
 
 	wg.Wait()
 }

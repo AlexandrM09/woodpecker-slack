@@ -63,16 +63,20 @@ func oauthHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				// fmt.Println(body)
 				accessToken := body["access_token"].(string)
-				// refreshToken := body["refresh_token"].(string)
+				refreshToken := body["refresh_token"].(string)
 				user := localUsers.FindByWrikeID(users.WrikeID(wrike.GetUserIDByToken(accessToken)))
 				fmt.Println(user)
-				// user.OauthToken = users.OauthToken(accessToken)
-				// user.RefreshToken = refreshToken
+				if user == nil {
+					fmt.Fprintln(w, "I don't know you")
+				} else {
+					user.OauthToken = users.OauthToken(accessToken)
+					user.RefreshToken = refreshToken
+					localUsers.Sync()
+					fmt.Fprintln(w, "Success")
+				}
 			}
 
 			// fmt.Println(body)
 		}
-
-		fmt.Fprintln(w, "Hello")
 	}
 }

@@ -33,8 +33,8 @@ func Start(wg *sync.WaitGroup, users *musers.Users, api *wrike.Client, apiM *sla
 	for message := range apiM.GetMessages() {
 		user := users.FindBySlackID(musers.SlackID(message.User))
 		user.SlackChannal = string(message.Channel)
-		// if user.OauthToken == "" {
-		if false {
+		if user.OauthToken == "" {
+			// if false {
 			apiM.SendMessage("Need oauth https://www.wrike.com/oauth2/authorize/v4?client_id="+config.Wrike.ID+"&response_type=code", message.Channel)
 		} else {
 			if match := pattern.FindStringSubmatch(message.Text); match != nil {
