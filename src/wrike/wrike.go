@@ -1,21 +1,23 @@
 package wrike
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
-	"net/http"
-	"encoding/json"
 
-	wrike "github.com/pierreboissinot/go-wrike"
 	musers "../users"
+	newWrike "github.com/DarkHole1/go-wrike"
+	wrike "github.com/pierreboissinot/go-wrike"
 )
 
 type Client struct {
 	api          *wrike.Client
+	newAPI       *newWrike.API
 	statusToName map[string]string
 	nameToStatus map[string]string
 }
@@ -56,31 +58,24 @@ func New(token, _id, _secret string) *Client {
 	secret = _secret
 	client := &Client{
 		api:          wrike.NewClient(nil, token),
+		newAPI:       &newWrike.API{Token: token, ID: _id, Secret: _secret},
 		nameToStatus: make(map[string]string),
 		statusToName: make(map[string]string),
 	}
 
-	data := new(struct {
-		Data []struct {
-			Name           string
-			CustomStatuses []struct {
-				ID   string
-				Name string
-			}
-		}
-	})
+	workflows, _ := client.newAPI.GetWorkflows()
 
-	req, _ := client.api.NewRequest("GET", "workflows", nil)
-	client.api.Do(req, data)
-
-	for _, workflow := range data.Data {
-		if workflow.Name == "Default Workflow" {
+	for _, workflow := range workflows {
+		if workflow.Standard {
 			for _, status := range workflow.CustomStatuses {
 				client.nameToStatus[status.Name] = status.ID
 				client.statusToName[status.ID] = status.Name
 			}
 		}
 	}
+
+	fmt.Println(client.nameToStatus)
+	fmt.Println(client.statusToName)
 
 	return client
 }
