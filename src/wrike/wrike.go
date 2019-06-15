@@ -74,9 +74,6 @@ func New(token, _id, _secret string) *Client {
 		}
 	}
 
-	fmt.Println(client.nameToStatus)
-	fmt.Println(client.statusToName)
-
 	return client
 }
 
