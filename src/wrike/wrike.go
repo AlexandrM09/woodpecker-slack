@@ -139,26 +139,6 @@ func (c *Client) GetTasksInProgressByUser(id string) []newWrike.Task {
 }
 
 func (c *Client) GetPotentialTasksByUser(id string) []newWrike.Task {
-	// var params struct {
-	// 	Responsibles   string `url:"responsibles"`
-	// 	CustomStatuses string `url:"customStatuses"`
-	// }
-	// params.Responsibles = "[" + id + "]"
-	// params.CustomStatuses = "[" + c.nameToStatus["New"] + "]"
-	//
-	// req, _ := c.api.NewRequest("GET", "tasks", params)
-	// resp := new(tasksResponse)
-	// _, err := c.api.Do(req, resp)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	//
-	// for i := 0; i < len(resp.Data); i++ {
-	// 	resp.Data[i].CustomStatus = c.statusToName[resp.Data[i].CustomStatusID]
-	// }
-	//
-	// return resp.Data
-
 	tasks, _ := c.newAPI.QueryTasks(&newWrike.QueryTasksParams{
 		Responsibles:   []string{id},
 		CustomStatuses: []string{c.nameToStatus["New"]},
