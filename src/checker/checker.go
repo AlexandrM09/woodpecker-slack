@@ -71,7 +71,7 @@ func processUser(user *users.User, us *users.Users, date, outdated time.Time, ap
 			apiM.SendMessage("Everything is ok", slack.ChannelID(user.SlackChannal))
 		}
 	} else {
-		tasks = api.GetPotentialTasksByUser(string(user.WrikeID))
+		tasks := api.GetPotentialTasksByUser(string(user.WrikeID))
 		if len(tasks) != 0 {
 			s := "You don't have any tasks in progress. Choose one:\n"
 			for _, task := range tasks {

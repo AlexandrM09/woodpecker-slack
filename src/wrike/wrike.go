@@ -134,27 +134,35 @@ type tasksResponse struct {
 	Data []Task
 }
 
-func (c *Client) GetOutdatedTasksByUser(id string, date time.Time) []Task {
-	var params taskParams
-	params.Responsibles = "[" + id + "]"
-	params.CustomStatuses = "[" + c.nameToStatus["In Progress"] + "]"
-	params.UpdatedDate = "{\"end\":\"" + date.UTC().Format("2006-01-02T15:04:05Z") + "\"}"
+func (c *Client) GetOutdatedTasksByUser(id string, date time.Time) []newWrike.Task {
+	// var params taskParams
+	// params.Responsibles = "[" + id + "]"
+	// params.CustomStatuses = "[" + c.nameToStatus["In Progress"] + "]"
+	// params.UpdatedDate = "{\"end\":\"" + date.UTC().Format("2006-01-02T15:04:05Z") + "\"}"
+	//
+	// req, _ := c.api.NewRequest("GET", "tasks", params)
+	// resp := new(tasksResponse)
+	// _, err := c.api.Do(req, resp)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	//
+	// for i := 0; i < len(resp.Data); i++ {
+	// 	resp.Data[i].CustomStatus = c.statusToName[resp.Data[i].CustomStatusID]
+	// }
+	//
+	// return resp.Data
 
-	req, _ := c.api.NewRequest("GET", "tasks", params)
-	resp := new(tasksResponse)
-	_, err := c.api.Do(req, resp)
-	if err != nil {
-		panic(err)
-	}
+	tasks, _ := c.newAPI.QueryTasks(&newWrike.QueryTasksParams{
+		Responsibles:   []string{id},
+		CustomStatuses: []string{c.nameToStatus["In Progress"]},
+		UpdatedDate:    &newWrike.DateRange{End: newWrike.OptionalString(date.UTC().Format("2006-01-02T15:04:05Z"))},
+	})
 
-	for i := 0; i < len(resp.Data); i++ {
-		resp.Data[i].CustomStatus = c.statusToName[resp.Data[i].CustomStatusID]
-	}
-
-	return resp.Data
+	return tasks
 }
 
-func (c *Client) GetTasksInProgressByUser(id string) []Task {
+func (c *Client) GetTasksInProgressByUser(id string) []newWrike.Task {
 	return c.GetOutdatedTasksByUser(id, time.Now())
 }
 
