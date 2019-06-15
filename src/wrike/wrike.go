@@ -99,21 +99,11 @@ func (c *Client) GetUsers() []newWrike.Contact {
 
 func GetUserIDByToken(token string) string {
 	fmt.Println("Token: " + token)
-	api := wrike.NewClient(nil, token)
-	var data struct {
-		Me bool `url:"me"`
-	}
-	data.Me = true
-	req, _ := api.NewRequest("GET", "contacts", data)
+	api := newWrike.API{Token: token}
 
-	u := new(struct {
-		Data []struct {
-			ID string
-		}
-	})
-	api.Do(req, u)
-	fmt.Println(u)
-	return u.Data[0].ID
+	contacts, _ := api.QueryContacts(&newWrike.QueryContactsParams{Me: newWrike.OptionalBool(true)})
+
+	return contacts[0].ID
 }
 
 type Task struct {
@@ -135,24 +125,6 @@ type tasksResponse struct {
 }
 
 func (c *Client) GetOutdatedTasksByUser(id string, date time.Time) []newWrike.Task {
-	// var params taskParams
-	// params.Responsibles = "[" + id + "]"
-	// params.CustomStatuses = "[" + c.nameToStatus["In Progress"] + "]"
-	// params.UpdatedDate = "{\"end\":\"" + date.UTC().Format("2006-01-02T15:04:05Z") + "\"}"
-	//
-	// req, _ := c.api.NewRequest("GET", "tasks", params)
-	// resp := new(tasksResponse)
-	// _, err := c.api.Do(req, resp)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	//
-	// for i := 0; i < len(resp.Data); i++ {
-	// 	resp.Data[i].CustomStatus = c.statusToName[resp.Data[i].CustomStatusID]
-	// }
-	//
-	// return resp.Data
-
 	tasks, _ := c.newAPI.QueryTasks(&newWrike.QueryTasksParams{
 		Responsibles:   []string{id},
 		CustomStatuses: []string{c.nameToStatus["In Progress"]},
