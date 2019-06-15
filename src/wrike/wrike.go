@@ -138,26 +138,33 @@ func (c *Client) GetTasksInProgressByUser(id string) []newWrike.Task {
 	return c.GetOutdatedTasksByUser(id, time.Now())
 }
 
-func (c *Client) GetPotentialTasksByUser(id string) []Task {
-	var params struct {
-		Responsibles   string `url:"responsibles"`
-		CustomStatuses string `url:"customStatuses"`
-	}
-	params.Responsibles = "[" + id + "]"
-	params.CustomStatuses = "[" + c.nameToStatus["New"] + "]"
+func (c *Client) GetPotentialTasksByUser(id string) []newWrike.Task {
+	// var params struct {
+	// 	Responsibles   string `url:"responsibles"`
+	// 	CustomStatuses string `url:"customStatuses"`
+	// }
+	// params.Responsibles = "[" + id + "]"
+	// params.CustomStatuses = "[" + c.nameToStatus["New"] + "]"
+	//
+	// req, _ := c.api.NewRequest("GET", "tasks", params)
+	// resp := new(tasksResponse)
+	// _, err := c.api.Do(req, resp)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	//
+	// for i := 0; i < len(resp.Data); i++ {
+	// 	resp.Data[i].CustomStatus = c.statusToName[resp.Data[i].CustomStatusID]
+	// }
+	//
+	// return resp.Data
 
-	req, _ := c.api.NewRequest("GET", "tasks", params)
-	resp := new(tasksResponse)
-	_, err := c.api.Do(req, resp)
-	if err != nil {
-		panic(err)
-	}
+	tasks, _ := c.newAPI.QueryTasks(&newWrike.QueryTasksParams{
+		Responsibles:   []string{id},
+		CustomStatuses: []string{c.nameToStatus["New"]},
+	})
 
-	for i := 0; i < len(resp.Data); i++ {
-		resp.Data[i].CustomStatus = c.statusToName[resp.Data[i].CustomStatusID]
-	}
-
-	return resp.Data
+	return tasks
 }
 
 func (c *Client) CommentTask(id, comment string) (bool, error) {
