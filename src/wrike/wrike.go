@@ -53,6 +53,16 @@ func filter(vs []Data, f func(Data) bool) []Data {
 	return vsf
 }
 
+func filterContacts(vs []newWrike.Contact, f func(newWrike.Contact) bool) []newWrike.Contact {
+	vsf := make([]newWrike.Contact, 0)
+	for _, v := range vs {
+		if f(v) {
+			vsf = append(vsf, v)
+		}
+	}
+	return vsf
+}
+
 func New(token, _id, _secret string) *Client {
 	id = _id
 	secret = _secret
@@ -77,16 +87,14 @@ func New(token, _id, _secret string) *Client {
 	return client
 }
 
-func (c *Client) GetUsers() []Data {
-	req, _ := c.api.NewRequest("GET", "contacts", nil)
+func (c *Client) GetUsers() []newWrike.Contact {
+	contacts, _ := c.newAPI.QueryContacts(&newWrike.QueryContactsParams{})
 
-	u := new(users)
-	c.api.Do(req, u)
-	d := filter(u.Data, func(d Data) bool {
-		return d.Type == "Person" && d.LastName != "Bot"
+	users := filterContacts(contacts, func(contact newWrike.Contact) bool {
+		return contact.Type == "Person" && contact.LastName != "Bot"
 	})
 
-	return d
+	return users
 }
 
 func GetUserIDByToken(token string) string {
