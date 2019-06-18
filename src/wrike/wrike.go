@@ -212,30 +212,12 @@ func (c *Client) TakeTask(userid, taskid string) (bool, error) {
 }
 
 func (c *Client) FinishTask(taskid string) (bool, error) {
-	req, err := c.api.NewRequest("PUT", "tasks/"+taskid, nil)
-	if err != nil {
-		return false, err
-	}
-
-	form := url.Values{"customStatus": {c.nameToStatus["Completed"]}}.Encode()
-	req.Body = ioutil.NopCloser(strings.NewReader(form))
-	req.ContentLength = int64(len(form))
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	fmt.Println(form)
-
-	resp := new(struct {
-		Error            string
-		ErrorDescription string
+	_, err := c.newAPI.ModifyTask(taskid, &newWrike.ModifyTaskParams{
+		CustomStatus: newWrike.OptionalString(c.nameToStatus["Completed"]),
 	})
 
-	_, err = c.api.Do(req, resp)
 	if err != nil {
 		return false, err
-	}
-
-	if resp.Error != "" {
-		return false, errors.New(resp.ErrorDescription)
 	}
 
 	return true, nil
