@@ -175,7 +175,7 @@ func (c *Client) CommentTask(id, comment string) (bool, error) {
 	return true, nil
 }
 
-func sfilter(vs []string, f func(string) bool) []string {
+func filterStrings(vs []string, f func(string) bool) []string {
 	vsf := make([]string, 0)
 	for _, v := range vs {
 		if f(v) {
@@ -187,55 +187,25 @@ func sfilter(vs []string, f func(string) bool) []string {
 
 func (c *Client) TakeTask(userid, taskid string) (bool, error) {
 	// query task
-	req1, err := c.api.NewRequest("GET", "tasks/"+taskid, nil)
-	if err != nil {
-		return false, err
-	}
-	resp1 := new(struct {
-		Error            string
-		ErrorDescription string
-		Data             []struct {
-			ResponsibleIDs []string
-		}
-	})
-	_, err = c.api.Do(req1, resp1)
+	task, err := c.newAPI.GetTask(taskid, &newWrike.GetTasksParams{})
+
 	if err != nil {
 		return false, err
 	}
 
-	if resp1.Error != "" {
-		return false, errors.New(resp1.ErrorDescription)
-	}
-
-	needToDelete := resp1.Data[0].ResponsibleIDs
-	needToDelete = sfilter(needToDelete, func(s string) bool {
+	needToDelete := task.ResponsibleIDs
+	needToDelete = filterStrings(needToDelete, func(s string) bool {
 		return s != userid
 	})
+
 	// remove responsibles and change status
-	req2, err := c.api.NewRequest("PUT", "tasks/"+taskid, nil)
-	if err != nil {
-		return false, err
-	}
-
-	form := url.Values{"removeResponsibles": {"[" + strings.Join(needToDelete, ", ") + "]"}, "customStatus": {c.nameToStatus["In Progress"]}}.Encode()
-	req2.Body = ioutil.NopCloser(strings.NewReader(form))
-	req2.ContentLength = int64(len(form))
-	req2.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	fmt.Println(form)
-
-	resp2 := new(struct {
-		Error            string
-		ErrorDescription string
+	_, err = c.newAPI.ModifyTask(taskid, &newWrike.ModifyTaskParams{
+		RemoveResponsibles: needToDelete,
+		CustomStatus:       newWrike.OptionalString(c.nameToStatus["In Progress"]),
 	})
 
-	_, err = c.api.Do(req2, resp2)
 	if err != nil {
 		return false, err
-	}
-
-	if resp2.Error != "" {
-		return false, errors.New(resp2.ErrorDescription)
 	}
 
 	return true, nil
@@ -398,6 +368,7 @@ func (c *Client) FromOAuth(user *musers.User) *Client {
 	refresh := user.RefreshToken
 	api := &Client{nameToStatus: c.nameToStatus, statusToName: c.statusToName}
 	api.api = wrike.NewClient(nil, access)
+	api.newAPI = &newWrike.API{Token: access, RefreshToken: refresh, ID: c.newAPI.ID, Secret: c.newAPI.Secret}
 
 	if !api.Check() {
 		access, refresh = Refresh(refresh)
